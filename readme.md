@@ -1,8 +1,8 @@
-* Introduction
+# Introduction
 
 Mars Rover is a game that I developed using HTML, CSS and JavaScript to help illustrate simple programming concepts for a career day presentation. The player must write a program that instructs the Rover to navigate from the starting position to a target destination. 
 
-* Playing the Game
+# Playing the Game
 
 To successfully navigate the Rover from the lower left square of the screen to the upper right corner of the screen write a program using the following simple commands:
 
