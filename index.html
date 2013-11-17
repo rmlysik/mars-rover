@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Mars Rover</title>
+	<style>
+	html, body {
+		height:100%;
+		padding: 0;
+		margin: 0;
+	}
+	
+	body {
+		background-image:url('mars.png');
+		font-family: Arial, Verdana;
+	}
+	
+	.grid {
+		position: fixed;
+		top: 50%;
+		left: 50%;
+		margin-left: -320px;
+		margin-top: -320px;
+	}
+	
+	h1 {
+		text-align: center;
+	}
+	
+	#instructions {
+		background-color: rgba(0, 0, 0, .5);
+		color: #FFF;
+		width: 20%;
+		height: 100%;
+		float: left;
+		padding: 20px;
+	}
+	
+	#console {
+		background-color: rgba(0, 0, 0, .5);
+		color: #FFF;
+		width: 20%;
+		height: 100%;
+		float: right;
+		padding: 20px;
+	}
+	
+	#program {
+		width: 100%;
+		background-color: rgba(255, 255, 255, .5);
+		font-size: 30px;
+		font-family: Arial, Verdana;
+		color: #333;
+		resize: none;
+		border: 0;
+		text-transform: uppercase;
+	}
+	
+	#transmit {
+		margin-left: 0;
+		margin-right: 0;
+		margin-top: 20px;
+		width: 100%;
+		background-color: rgba(0, 0, 0, .9);
+		padding: 20px;
+		color: #FFF;
+		font-size: 40px;
+		border-width: 0;
+	}
+	
+	#message {
+		text-align: center;
+		width: 320px;
+		position: fixed;
+		top: 50%;
+		left: 50%;
+		margin-left: -160px;
+		margin-top: -150px;
+		background-color: #F00;
+		color: #FFF;
+		font-size: 60px;
+		display: none;
+		padding-top: 80px;
+		padding-bottom: 80px;
+	}
+	
+	</style>	
+	
+	<script>
+	
+	var board = 
+	[ [0,0,0,1,1,1,0,2],
+	  [0,1,0,0,0,0,0,0],
+		[0,1,1,1,1,0,1,1],
+		[0,0,0,0,1,0,0,0],
+		[1,1,1,0,1,1,1,0],
+		[0,0,0,0,0,0,1,0],
+		[0,1,1,0,1,0,1,0],
+		[3,0,0,0,1,0,0,0] ]
+		
+	var instructions = "";
+	
+	//var instructions = "MMMLMMRMMRMMLMMLMMMMLMMRMMRMMLM";
+	//var instructions = "MLMM";
+	
+	var posX = 0;
+	var posY = 7;
+	var dirX = 1;
+	var dirY = 0;
+	var step = 0;
+	var error = false;
+	
+	function initialize() {
+		posX = 0;
+		posY = 7;
+		dirX = 1;
+		dirY = 0;
+		step = 0;
+		error = false;
+	}
+	
+	function draw() {
+		drawGrid();
+		drawRover();
+	}
+	
+	function moveRover() {	
+		posX += dirX;
+		posY += dirY;
+		
+		if ((posX < 0) || (posX > 7) || (posY < 0) || (posY > 7) || (board[posY][posX] == 1))  {
+			error = true;
+		}
+	}
+	
+	function processInstructions() {		
+		var transmit = document.getElementById('transmit');
+		var program = document.getElementById('program');
+		var message = document.getElementById('message');
+		if (transmit.value == "RESET") {
+			transmit.value = "TRANSMIT";
+			program.value = "";
+			instructions = "";
+			message.style.display = "none";
+			initialize();
+			draw();
+		}
+		else {
+			transmit.style.display = "none";
+			instructions = program.value;
+			instructions = instructions.toUpperCase();
+			switch (instructions[step]) {
+				case 'M': // move
+					moveRover();
+					break;
+				case 'R': // turn right
+					if (dirY == 0) {
+						dirY = dirX;
+						dirX = 0;
+					}
+					else {
+						dirX = dirY * -1;
+						dirY = 0;
+					}
+					break;
+				case 'L': // turn left
+					if (dirY == 0) {
+						dirY = dirX * -1;
+						dirX = 0;
+					}
+					else {
+						dirX = dirY;
+						dirY = 0;
+					}
+					break;
+			}
+					
+			step++;
+			
+			if (!error) {
+				draw(); 
+				
+				if (step < instructions.length) {
+					window.setTimeout(processInstructions, 500);
+				}
+				else {
+					if (board[posY][posX] == 2) {
+						missionCompleted(true);
+					}
+					else {
+						missionCompleted(false);
+					}
+				}
+			}
+			else {
+				missionCompleted(false);
+			}
+		}
+	}
+	
+	function missionCompleted(isSuccessful) {		
+		var message = document.getElementById('message');
+		var transmit = document.getElementById('transmit');
+		
+		if (isSuccessful == true) {
+			message.style.backgroundColor = "rgba(0, 255, 0, .5)";
+			message.innerHTML = "MISSION SUCCESS";
+		}
+		else {			
+			message.style.backgroundColor = "rgba(255, 0, 0, .5)";
+			message.innerHTML = "MISSION FAILURE";
+		}
+		
+		message.style.display = "inline";
+		transmit.value = "RESET"
+		transmit.style.display = "inline";
+	}
+	
+	function drawGrid() {
+		var canvas=document.getElementById('grid');
+		var context=canvas.getContext('2d');
+		context.clearRect ( 0 , 0 , 640 , 640 );
+		
+		for (col = 0; col < 8; col++) {
+			for (row = 0; row < 8; row++) {
+				switch (board[row][col]) {	
+				case 0:
+					context.fillStyle='rgba(0, 0, 0, .3)';
+					break;
+				case 1:
+					context.fillStyle='rgba(0, 0, 0, .6)';
+					break;
+				case 2:
+					context.fillStyle='rgba(255, 255, 255, .5)';
+					break;
+				case 3:
+					context.fillStyle='rgba(255, 255, 255, .5)';
+					break;
+				}
+				
+				context.fillRect(col*80,row*80,80,80);
+			}		
+		}
+	}
+		
+	function drawRover() {
+		var canvas=document.getElementById('grid');
+		var context=canvas.getContext('2d');
+		var x              = 40+posX*80;            // x coordinate
+		var y              = 40+posY*80;            // y coordinate
+		var radius         = 20;                    // Arc radius
+		var startAngle     = 0;                     // Starting point on circle
+		var endAngle       = 2*Math.PI; 						// End point on circle
+		var anticlockwise  = true; 								  // clockwise or anticlockwise
+		
+		context.beginPath();
+		context.arc(x, y, radius, startAngle, endAngle, anticlockwise);
+		context.fillStyle = '#FFF';
+		context.fill();
+		
+		// draw a line from the center point to the circle's edge in the 
+		// direction of motion
+		context.moveTo(x, y);
+		context.lineTo(x + (dirX * radius), y + (dirY * radius));
+		context.stroke();
+	}
+	
+	function checkKeyPressed(e) {
+		var keynum;
+
+		if(window.event){ // IE					
+			keynum = e.keyCode;
+		} else if(e.which){ // Netscape/Firefox/Opera					
+			keynum = e.which;
+		}
+		if ((keynum == 76) || (keynum == 77) || (keynum == 82) || (keynum == 8) || (keynum == 14) || (keynum == 15)) {
+			return;
+		}
+		else {
+			e.preventDefault();
+		}
+		
+		//alert(String.fromCharCode(keynum));
+	}
+	</script>
+</head>
+<body onload="draw();">
+	<div id="instructions">
+	<h1>INSTRUCTIONS</h1>
+	<p>Your objective is to program the Mars rover to safely travel to the target destination using only the Mars Rover Navigation Language (MRNL) commands below:</p>
+	<ul>
+		<li>R - Turn right</li>
+		<li>L - Turn left</li>
+		<li>M - Move</li>
+	</ul>
+	<p>Once you have written the program, click TRANSMIT to send the commands to the rover for processing.</p>
+	<p>Good luck!</p>
+	</div>
+	<div id="main" class="grid">
+		<canvas id="grid" height="640px" width="640px"></canvas>
+	</div>
+	<div id="console">
+		<h1>PROGRAM</h1>
+		<form>
+			<textarea rows="10" id="program" type="text" onkeydown="checkKeyPressed(event);"></textarea>
+			<input id="transmit" type="button" value="TRANSMIT" onclick="processInstructions();"></input>
+		</form>
+		<div id="message"></div>
+	</div>
+</body>
+<html>
